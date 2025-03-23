@@ -1,0 +1,26 @@
+BEGIN { FS=",";
+target=1;
+output[0]="start"
+header=""
+OFS=","; }
+{
+if(NR==1)
+for ( i = 1;i<=NF;i++)
+{
+   header=$0;
+   if(col == $i)
+   target=i;
+
+} 
+else
+   if (evaluateCondition($0, cond, header)) 
+   $target=val;
+   
+output[NR]=$0;
+}
+END { 
+for ( i = 1;i<=NR;i++)
+{
+   print output[i];
+}
+}

@@ -1,0 +1,23 @@
+BEGIN { FS=",";
+target=1;
+output[0]="start"
+OFS=","; }
+{
+if(NR==1)
+for ( i = 1;i<=NF;i++)
+{
+   if(column == $i)
+   target=i;
+}
+if(NR==row)
+   $target=value
+   
+output[NR]=$0;
+}
+END { 
+for ( i = 1;i<=NR;i++)
+{
+   print output[i];
+}
+}
+

@@ -1,0 +1,50 @@
+#!/bin/bash
+
+#export PATH=$PATH:"~/Documents/DBMS/scripts"
+
+export DBSM_PATH=$(echo $0 | sed -E 's/(\/mydb)//g');
+export PATH=$PATH:"$DBSM_PATH/scripts"
+export CONNECTED=false
+export CURRENT_DB=""
+OPS="MyDBMS"
+MYPS=$OPS
+
+clear
+echo -e "\e[34m#######################################" 
+echo -e  "########### WELCOME TO MYDB ###########"
+echo -e "#######################################\e[0m" 
+echo -e "\n\n\n\n"
+while true;  do
+read -e -p $'\e[34m'"$MYPS> "$'\e[0m' -a input
+echo "${input[@]}" >> ~/.bash_history
+history -s "${input[@]}"
+case ${input[0],,} in
+   "create" | "drop" | "list" | "insert"| "select" | "update" | "delete")
+       parse.sh ${input[@]}
+       ;;
+   "connect")
+       parse.sh ${input[@]}
+      if [[ $? = 0 ]]; then
+       CONNECTED=true
+       CURRENT_DB=${input[1],,}
+       echo "$CURRENT_DB";
+       echo "$CONNECTED";
+       MYPS="$OPS@$CURRENT_DB"
+       fi
+       ;;
+     "disconnect")
+       CONNECTED=false
+       CURRENT_DB=""
+       MYPS="$OPS"
+       echo -e "\e[32mDISCONNECTION SUCCESSFUL\e[0m";
+       ;;
+       "exit")
+       break;
+       ;;
+       *)
+       echo "keyword not supported"
+       ;;
+esac
+done
+
+

@@ -1,0 +1,69 @@
+BEGIN {
+    FS = ",";
+    split(cols, colarray, ",");
+    output[0] = "start";
+    output_width[0] = 0;
+    r = 0;
+    final_output[0] = "start";
+    header = "";
+}
+
+{
+    ORS = "|";
+    if (NR == 1) {
+        r++;
+        for (k = 1; k <= cols_num; k++) {
+            for (i = 1; i <= NF; i++) {
+                if (colarray[k] == $i) {
+                    output[colarray[k]] = i;
+                    output_width[k] = length($i);
+                    final_output[r "," k] = $i;
+                    break;
+                }
+            }
+        }
+        header = $0;
+    } else {
+        if (evaluateCondition($0, cond, header)) {
+            r++;
+            for (k = 1; k <= cols_num; k++) {
+            
+                if (output_width[k] < length($output[colarray[k]])) {
+                    output_width[k] = length($output[colarray[k]]);
+                }
+                final_output[r "," k] = $output[colarray[k]];
+            }
+        }
+    }
+}
+
+END {
+    line="━"
+    for (k = 1; k <= cols_num; k++){
+         for (ro = 1; ro <= output_width[k]+1; ro++){
+        if(k != cols_num || ro != output_width[k]+1)
+        line= line "━"
+    }
+    }
+    line = line "\n"
+    formatField="%-*s┃"
+    formatLine="%-*s┃\n"
+    printf  line
+    for (ro = 1; ro <= r; ro++) {
+    if (ro==2)
+          {
+           gsub("━","─",line)
+           gsub("┃","│",formatField)
+           gsub("┃","│",formatLine)
+           }
+        for (k = 1; k <= cols_num; k++) {
+            if (k < cols_num) {
+                printf formatField, output_width[k], final_output[ro "," k];  
+            } else {
+                printf  formatLine, output_width[k], final_output[ro "," k]; 
+            }
+        }
+             printf  line
+    }
+
+}

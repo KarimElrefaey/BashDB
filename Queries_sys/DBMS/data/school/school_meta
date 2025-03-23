@@ -1,0 +1,2 @@
+student=index=1;
+student=(id:int,age:int,name:text)=3

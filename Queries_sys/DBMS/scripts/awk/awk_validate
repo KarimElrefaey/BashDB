@@ -1,0 +1,37 @@
+function evaluateCondition(row, cond, header) {
+    if (cond == "") {
+        return 1;
+    } 
+    if (match(cond, /(<=|>=|!=|=|>|<)/)) {
+        op = substr(cond, RSTART, RLENGTH);
+    } else {
+        return 0;
+    }
+
+    split(cond, colval, op);
+    split(row, row_arr, ",");
+    split(header, header_arr, ",");
+
+    cnum = 1;
+    n = 0;
+    for (col_name in header_arr) {
+        n++;
+    }
+
+    for (i = 1; i <= n; i++) {
+        if (header_arr[i] == colval[1]) {
+            cnum = i;
+            break;
+        }
+    }
+
+    return_value = 0;
+    if (op == "="  && row_arr[cnum] == colval[2]) return_value = 1;
+    if (op == "!=" && row_arr[cnum] != colval[2]) return_value = 1;
+    if (op == ">"  && row_arr[cnum] > colval[2]) return_value = 1;
+    if (op == "<"  && row_arr[cnum] < colval[2]) return_value = 1;
+    if (op == ">=" && row_arr[cnum] >= colval[2]) return_value = 1;
+    if (op == "<=" && row_arr[cnum] <= colval[2]) return_value = 1;
+
+    return return_value;
+}

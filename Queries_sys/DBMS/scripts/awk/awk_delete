@@ -1,0 +1,12 @@
+BEGIN {
+    FS = ",";
+    OFS = ",";
+    header = "";
+}
+{
+if (NR == 1) 
+     header = $0;
+else 
+    if (!evaluateCondition($0, cond, header)) 
+     print $0;
+}
