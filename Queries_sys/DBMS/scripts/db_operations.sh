@@ -41,18 +41,24 @@ fi
 
 
 drop_db(){
-local dbname=$1
+local dbname=$1;
+if $CONNECTED; then
+   if [[ $CURRENT_DB == $dbname ]]; then
+    echo -e "\e[31mCANT DROP DATABASE $dbname WHILE CURRENTLY CONNECTED TO IT\e[0m";
+    return 1;
+   fi
+fi
 if [[ -d "$DBSM_PATH/data/$dbname" ]]; then 
-   rm -R "$DBSM_PATH/data/$dbname"
-   echo -e "\e[32mDATABASE $dbname WAS DROPPED SUCCESSFULLY\e[0m"
+   rm -R "$DBSM_PATH/data/$dbname";
+   echo -e "\e[32mDATABASE $dbname WAS DROPPED SUCCESSFULLY\e[0m";
 else
-   echo -e "\e[31mDATABASE $dbname DOESNT EXIST\e[0m"
+   echo -e "\e[31mDATABASE $dbname DOESNT EXIST\e[0m";
 fi
 }
 
 
 list_db() {
-echo -e "\e[34mAvailable Databases:\e[0m"
+echo -e "\e[36mAvailable Databases:\e[0m"
 local databases=($(ls -A "$DBSM_PATH/data"))  
 if [[ ${#databases[@]} -eq 0 ]]; then  
         echo "No databases found."
@@ -61,6 +67,26 @@ fi
 for db in "${databases[@]}"; do
       if [[ -d "$DBSM_PATH/data/$db" ]]; then 
          echo "$db"
+      fi
+done
+}
+
+
+
+list_db_meta() {
+local database=($(ls -A "$DBSM_PATH/data/$CURRENT_DB"))  
+if [[ ${#database[@]} -eq 0 ]]; then  
+                  echo -e "\e[33mNO TABLES IN DATABASE YET\e[0m";
+        return 
+fi
+local metafile="${CURRENT_DB}-meta";
+
+echo -e "\e[36mTABLES IN DATABASE $CURRENT_DB :\e[0m"
+for file in "${database[@]}"; do
+      if [[ -f "$DBSM_PATH/data/$CURRENT_DB/$file" ]] && [[ ! $file =~ -meta$ ]] ; then 
+        # local tableline=$(grep "^$file=header=" "$DBSM_PATH/data/$CURRENT_DB/$metafile");
+         local header=$(sed -En  '/^id/p' "$DBSM_PATH/data/$CURRENT_DB/$file" 2>/dev/null );
+         echo "$file" " ===columns====> " "$header";
       fi
 done
 }

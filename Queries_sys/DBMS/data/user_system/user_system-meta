@@ -1,0 +1,4 @@
+users=index=7;
+users=header=(id:int,username:text,password:text)=3
+admins=index=2;
+admins=header=(id:int,username:text,password:text)=3

@@ -92,6 +92,14 @@ parseList() {
                    return 1;
                 fi
                 ;;
+               "meta")
+                if $CONNECTED; then
+                    list_db_meta ;
+                else 
+                  echo -e "\e[31mYOU ARE NOT CONNECTED TO A DATABASE \e[0m";
+                   return 1;
+                fi
+                ;;
                 *)
                    echo -e "\e[31mWRONG LIST STATEMENT \e[0m";
                    return 1;
@@ -130,6 +138,7 @@ parseList() {
 
 
     VALUES_FORMAT=$(echo "$input_part" | sed -E 's/(values)/=\1=/g; s/[[:space:]]//g')
+    set +f
     insert_into_table "$3" "$VALUES_FORMAT"
 }
 
@@ -205,6 +214,7 @@ parseDelete() {
                  condition="${@:5}"
              fi
              condition=$(echo "$condition" | sed -E "s/\<and\>/\&/g; s/\<or\>/|/g; s/ +//g")
+             set +f;
              delete_from_table $tablename  $condition ;
 
 }
@@ -230,16 +240,16 @@ parseUpdate() {
     local update_values="";
     local i=4;
     while (( i <= ${#} )); do
-        if [[ ${!i} == "where" ]]; then
+        if [[ ${!i} == "where" ]] ||  (( $i == ${#} )) ; then
             break 
         fi
         update_values+="${!i} "
-        ((i++))
+        ((i++));
     done
     update_values=$(echo "$update_values" | sed -E 's/ +$//')
 
     if ! [[ $update_values =~ ^([a-zA-Z0-9_]+\s*=\s*[a-zA-Z0-9_]+)(\s*,\s*[a-zA-Z0-9_]+\s*=\s*[a-zA-Z0-9_]+)*$ ]]; then
-        echo -e "\e[31mINVALID UPDATE FORMAT: EXPECTED 'column=value[, column=value]*'\e[0m"
+        echo -e "\e[31mERROR:INVALID UPDATE FORMAT: EXPECTED 'column=value'\e[0m"
         return 1
     fi
     
@@ -247,8 +257,8 @@ parseUpdate() {
     array=(${@})
   #  echo ${#array[@]}
   #  echo $i 
-    if (( $i  < ${#array[@]} )); then  
-         if  (( $i + 1 < ${#array[@]} )); then
+    if (( $i  <= ${#array[@]} )); then  
+         if  (( $i + 1 > ${#array[@]} )); then
                 echo -e "\e[31mINVALID UPDATE condition "
                 return 1;
          fi

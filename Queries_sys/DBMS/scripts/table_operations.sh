@@ -145,7 +145,9 @@ while (( $counter < ${#colarray[@]}  )); do
    fi
    (( counter+=1 ));
 done 
-declare -i rownumber=$(grep "^$tablename=index=[0-9]*;" "$DBSM_PATH/data/$CURRENT_DB/$metafile" | sed -E "s/(index=|;)//g");
+grep "$tablename=index=[0-9]*;" "$DBSM_PATH/data/$CURRENT_DB/$metafile" | sed -E "s/(index=|;)//g"
+declare -i rownumber=$(grep "$tablename=index=[0-9]*;" "$DBSM_PATH/data/$CURRENT_DB/$metafile" | sed -E "s/(index=|;)//g");
+echo $rownumber;
 (( rownumber+=1 ));
 insertrow="$rownumber,"
 max=8
@@ -153,7 +155,7 @@ for ((i=0; i<columncount-2; i++)); do
     insertrow="$insertrow,"
 done
 echo $insertrow >> "$DBSM_PATH/data/$CURRENT_DB/$tablename";
-sed -i -E "1s/^$tablename=index=[0-9]*;/$tablename=index=$rownumber;/g" "$DBSM_PATH/data/$CURRENT_DB/$metafile"
+sed -i -E "s/$tablename=index=[0-9]*;/$tablename=index=$rownumber;/g" "$DBSM_PATH/data/$CURRENT_DB/$metafile"
 declare -i  filerow=$(cat "$DBSM_PATH/data/$CURRENT_DB/$tablename" | wc -l) ;
 counter=0;
 while (( $counter < ${#colarray[@]}  )); do
@@ -212,6 +214,8 @@ while (( $counter < ${#colarray[@]}  )); do
    fi
    (( counter+=1 ));
 done 
+declare -i hits=$(awk -v cond="$condition" -f "$DBSM_PATH/scripts/awk/awk_validate" -f "$DBSM_PATH/scripts/awk/awk_count"   "$DBSM_PATH/data/$CURRENT_DB/$tablename");
+echo -e "\e[36m$hits MATCHES FOUND: \e[0m";
 awk -v cols="$select_columns" -v cols_num="${#colarray[@]}" -v  cond="$condition"  -f "$DBSM_PATH/scripts/awk/awk_validate" -f "$DBSM_PATH/scripts/awk/awk_select"  "$DBSM_PATH/data/$CURRENT_DB/$tablename"  ;
 } 
 
@@ -237,9 +241,13 @@ local tableline=$(grep "^$tablename=header=" "$DBSM_PATH/data/$CURRENT_DB/$metaf
         return 1;
    fi
  fi
- 
+declare -i hits=$(awk -v cond="$condition" -f "$DBSM_PATH/scripts/awk/awk_validate" -f "$DBSM_PATH/scripts/awk/awk_count"   "$DBSM_PATH/data/$CURRENT_DB/$tablename");
+if ((  $hits > 0)); then
 awk -v cond="$condition" -f "$DBSM_PATH/scripts/awk/awk_validate" -f "$DBSM_PATH/scripts/awk/awk_delete"   "$DBSM_PATH/data/$CURRENT_DB/$tablename"  > tmp && mv tmp "$DBSM_PATH/data/$CURRENT_DB/$tablename";
- echo -e "\e[32mROW WAS DELETED SUCCESSFULLY\e[0m";
+fi
+echo -e "\e[32mQUERY EXECUTED SUCCESSFULLY\e[0m";
+echo -e "\e[32m$hits ROW/s DELETED\e[0m";
+
 } 
 
 ####################################################################
@@ -280,7 +288,11 @@ update_table(){
    fi
  fi
 
+declare -i hits=$(awk -v cond="$condition" -f "$DBSM_PATH/scripts/awk/awk_validate" -f "$DBSM_PATH/scripts/awk/awk_count"   "$DBSM_PATH/data/$CURRENT_DB/$tablename")
+if ((  $hits > 0)); then
 awk -v col="${colarray[0]}" -v val="${colarray[1]}" -v  cond="$condition" -f "$DBSM_PATH/scripts/awk/awk_validate" -f "$DBSM_PATH/scripts/awk/awk_update" "$DBSM_PATH/data/$CURRENT_DB/$tablename"  > tmp && mv tmp "$DBSM_PATH/data/$CURRENT_DB/$tablename";
-echo -e "\e[32mROW/s WAS UPDATED SUCCESSFULLY\e[0m";
+fi
+echo -e "\e[32mQUERY EXECUTED SUCCESSFULLY\e[0m";
+echo -e "\e[32m$hits ROW/s UPDATED\e[0m";
 } 
 

@@ -31,8 +31,8 @@ case ${input[0],,} in
       if [[ $? = 0 ]]; then
        CONNECTED=true
        CURRENT_DB=${input[1],,}
-       echo "$CURRENT_DB";
-       echo "$CONNECTED";
+       #echo "$CURRENT_DB";
+       #echo "$CONNECTED";
        MYPS="$OPS@$CURRENT_DB"
        fi
        ;;
