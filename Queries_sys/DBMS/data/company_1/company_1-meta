@@ -1,0 +1,2 @@
+employee=index=10;
+employee=header=(id:int,name:text,age:int,salary:int)=4;

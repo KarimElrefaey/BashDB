@@ -30,10 +30,9 @@ parseCreate() {
                    echo -e "\e[31mTOO FEW ARGUMENTS FOR CREATE TABLE \e[0m";
                    return 1;
                 fi
-                echo "${@:4}"
-                VALID_TABLE_FORMAT='^\(([a-z_][a-z0-9_]*\ (int|text))(,\ [a-z_][a-z0-9_]*\ (int|text))*\)$'
+                VALID_TABLE_FORMAT='^\([[:space:]]*([a-z][a-z0-9_]*[[:space:]]*(int|text)[[:space:]]*)[[:space:]]*(,[[:space:]]*[a-z_][a-z0-9_]*[[:space:]]*(int|text)[[:space:]]*)*[[:space:]]*\)[[:space:]]*$'
                 if [[ ! "${@:4}" =~ $VALID_TABLE_FORMAT ]]; then
-                   echo -e "\e[31mInvalid table \e[34format: (column_name TYPE,....)\e[0m"
+                   echo -e "\e[31mInvalid table \e[36mformat: table_name  (column_name TYPE (int or text only),....)\e[0m";
                    return 1
                 fi
                 TABLE_FORMAT=$(echo "${@:4}" | sed -E 's/[[:space:]]//g; s/(text|int)/:\1/g')
@@ -62,7 +61,7 @@ parseDrop() {
                 ;;
                "table")
                 if $CONNECTED; then
-                  echo -e "\e[34mTABLE WAS DELETED SUCCESSFULLY \e[0m";
+                   drop_table $3;
                 else 
                   echo -e "\e[31mYOU ARE NOT CONNECTED TO A DATABASE \e[0m";
                    return 1;
@@ -87,7 +86,7 @@ parseList() {
                 ;;
                "table")
                 if $CONNECTED; then
-                  echo -e "\e[34mTABLE WILL BE DISPLAYED \e[0m";
+                    list_table ;
                 else 
                   echo -e "\e[31mYOU ARE NOT CONNECTED TO A DATABASE \e[0m";
                    return 1;
@@ -126,7 +125,6 @@ parseList() {
 
     if [[ ! "$input_part" =~ $VALID_INSERT_FORMAT ]]; then
         echo -e "\e[31mInvalid format. Use: (col1,col2,...) values (val1,val2,...)\e[0m"
-        echo -e "\e[34mColumns must be lowercase/underscores. 'values' must be lowercase.\e[0m"
         return 1
     fi
 
@@ -174,6 +172,9 @@ parseSelect() {
                  condition="${@:afterfrom+3}"
              fi
              condition=$(echo "$condition" | sed -E "s/\<and\>/\&/g; s/\<or\>/|/g; s/ +//g")
+             local header=$(sed -En  '/^id/p' "$DBSM_PATH/data/$CURRENT_DB/$tablename" 2>/dev/null );
+             selectcolumns=$(echo $selectcolumns | sed -E "s/\*/$header/g");
+             set +f;
              select_from_table $tablename $selectcolumns $condition ;
 
 }
@@ -195,7 +196,6 @@ parseDelete() {
                 return 1;
             fi
              tablename=$3;
-             echo $tablename;
              local condition="";
              if ((  ${#} > 3 )); then  
                 if [[ $4 != "where" ]]  || (( 5 > ${#} ));  then
@@ -205,8 +205,6 @@ parseDelete() {
                  condition="${@:5}"
              fi
              condition=$(echo "$condition" | sed -E "s/\<and\>/\&/g; s/\<or\>/|/g; s/ +//g")
-             echo "Table: $tablename";
-             echo "Condition: $condition";
              delete_from_table $tablename  $condition ;
 
 }
@@ -223,39 +221,41 @@ parseUpdate() {
     fi
 
     local tablename=$2
-
+    
     if [[ $3 != "set" ]]; then
         echo -e "\e[31mSET EXPECTED AFTER TABLE NAME IN UPDATE\e[0m"
         return 1;
     fi
 
-    local update_values=""
-    local i=4
-
-    while (( i < ${#} )); do
+    local update_values="";
+    local i=4;
+    while (( i <= ${#} )); do
         if [[ ${!i} == "where" ]]; then
             break 
         fi
         update_values+="${!i} "
         ((i++))
     done
-
-
     update_values=$(echo "$update_values" | sed -E 's/ +$//')
 
     if ! [[ $update_values =~ ^([a-zA-Z0-9_]+\s*=\s*[a-zA-Z0-9_]+)(\s*,\s*[a-zA-Z0-9_]+\s*=\s*[a-zA-Z0-9_]+)*$ ]]; then
         echo -e "\e[31mINVALID UPDATE FORMAT: EXPECTED 'column=value[, column=value]*'\e[0m"
         return 1
     fi
+    
     local condition="";
+    array=(${@})
+  #  echo ${#array[@]}
+  #  echo $i 
     if (( $i  < ${#array[@]} )); then  
-         if  (( $i + 2 >= ${#array[@]} )); then
+         if  (( $i + 1 < ${#array[@]} )); then
                 echo -e "\e[31mINVALID UPDATE condition "
                 return 1;
          fi
     condition=${@:i+1};
     fi
     condition=$(echo "$condition" | sed -E "s/\<and\>/\&/g; s/\<or\>/|/g; s/ +//g")
+    set +f;
     update_table $tablename $update_values $condition ;    
 }
 
@@ -303,7 +303,7 @@ parse() {
           
     esac
 }
-
-
+set -f;
 parse ${@,,}
+
 

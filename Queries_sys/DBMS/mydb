@@ -10,20 +10,24 @@ OPS="MyDBMS"
 MYPS=$OPS
 
 clear
-echo -e "\e[34m#######################################" 
-echo -e  "########### WELCOME TO MYDB ###########"
-echo -e "#######################################\e[0m" 
-echo -e "\n\n\n\n"
+echo -e "\t\t\e[34m #######################################" 
+echo -e  "\t\t############# WELCOME TO MYDB ############"
+echo -e "\t\t #######################################\e[0m" 
+echo -e "\n\n"
 while true;  do
 read -e -p $'\e[34m'"$MYPS> "$'\e[0m' -a input
 echo "${input[@]}" >> ~/.bash_history
 history -s "${input[@]}"
 case ${input[0],,} in
    "create" | "drop" | "list" | "insert"| "select" | "update" | "delete")
-       parse.sh ${input[@]}
+       set -f  
+       parse.sh "${input[@]}"
+       set +f 
        ;;
    "connect")
-       parse.sh ${input[@]}
+       set -f  
+       parse.sh "${input[@]}"
+       set +f 
       if [[ $? = 0 ]]; then
        CONNECTED=true
        CURRENT_DB=${input[1],,}
@@ -40,6 +44,9 @@ case ${input[0],,} in
        ;;
        "exit")
        break;
+       ;;
+       "clear")
+       clear
        ;;
        *)
        echo "keyword not supported"

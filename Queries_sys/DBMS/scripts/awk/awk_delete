@@ -5,7 +5,10 @@ BEGIN {
 }
 {
 if (NR == 1) 
+{
      header = $0;
+     print $0;
+}     
 else 
     if (!evaluateCondition($0, cond, header)) 
      print $0;
