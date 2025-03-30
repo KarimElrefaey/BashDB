@@ -75,7 +75,7 @@ done
 
 list_db_meta() {
 local database=($(ls -A "$DBSM_PATH/data/$CURRENT_DB"))  
-if [[ ${#database[@]} -eq 0 ]]; then  
+if [[ ${#database[@]} -eq 1 ]]; then  
                   echo -e "\e[33mNO TABLES IN DATABASE YET\e[0m";
         return 
 fi

@@ -23,6 +23,20 @@ validate_name(){
             echo -e "\e[31mERROR: Can't  be longer than 20 character \e[0m"
             return 1
     fi
+    
+    if [[ "$entity" == "column" ]] && (( ${#} > 2 )); then
+       column_names=(${@:3})
+       declare -i column_occur=0
+       for column in ${column_names[@]}; do
+         if [[  $entity_name == $column ]]; then
+             (( column_occur++ ));          
+         fi
+         if (( $column_occur >= 2 )); then
+              echo -e "\e[31mERROR: $entity_name column appear twice \e[0m"
+             return 1;          
+         fi
+       done
+    fi
  
 
 }
@@ -44,7 +58,7 @@ else
    tableformat=$(echo "$tableformat"| sed -E 's/\(/\(id:int,/g' ) 
    local header=$(echo "$tableformat"| sed -E 's/(:text|:int|\(|\))//g' ) 
    for col_name in "${col_names[@]}"; do
-       validate_name "column" $col_name; 
+       validate_name "column" $col_name "${col_names[@]}"; 
        if (( $? == 1 )); then
         return 1;
       fi
@@ -64,7 +78,7 @@ local tablename=$1
 if [[ -f "$DBSM_PATH/data/$CURRENT_DB/$tablename" ]]; then 
    local metafile=$(echo -e "${CURRENT_DB}-meta")
    rm "$DBSM_PATH/data/$CURRENT_DB/$tablename";
-   grep -v "^$tablename=" "$DBSM_PATH/data/$CURRENT_DB/$metafile" > tempfile && mv tempfile   "$DBSM_PATH/data/$CURRENT_DB/$metafile";
+   grep -v "$tablename=" "$DBSM_PATH/data/$CURRENT_DB/$metafile" > tempfile && mv tempfile   "$DBSM_PATH/data/$CURRENT_DB/$metafile";
   echo -e "\e[32mDATABASE WAS DROPED SUCCESSFULLY\e[0m"
 else
    echo -e "\e[31mERROR: TABLE DOESNT EXIST\e[0m";
@@ -74,7 +88,7 @@ fi
 
 list_table() {
 local database=($(ls -A "$DBSM_PATH/data/$CURRENT_DB"))  
-if [[ ${#database[@]} -eq 0 ]]; then  
+if [[ ${#database[@]} -eq 1 ]]; then  
                   echo -e "\e[33mNO TABLES IN DATABASE YET\e[0m";
         return 
 fi
