@@ -11,7 +11,7 @@ validate_name() {
     fi
 }
 
-# Function to create a database (directory)
+
 create_database() {
     clear
     echo -e "========== Create Database =========="
@@ -103,7 +103,7 @@ create_table() {
     
     read -p "Enter number of columns: " col_count
     
-    # Validate if col_count is a number
+   
     if ! [[ "$col_count" =~ ^[0-9]+$ ]]; then
         print_message "error" "Column count must be a number!"
         read -p "Press Enter to continue..."
@@ -116,7 +116,6 @@ create_table() {
         return
     fi
     
-    # Array to store column names and types
     declare -a col_names
     declare -a col_types
     
@@ -131,7 +130,7 @@ create_table() {
             return
         fi
         
-        # Check if column name already exists
+       
         for existing in "${col_names[@]}"; do
             if [ "$existing" = "$col_name" ]; then
                 print_message "error" "Column name already used!"
@@ -159,7 +158,7 @@ create_table() {
         done
     done
     
-    # Create metadata file
+ 
     echo "$table_name" > "$db_name/$table_name.metadata"
     echo "$col_count" >> "$db_name/$table_name.metadata"
     
@@ -168,7 +167,7 @@ create_table() {
         echo "${col_names[$i]},${col_types[$i]}" >> "$db_name/$table_name.metadata"
     done
     
-    # Create empty data file
+   
     touch "$db_name/$table_name.data"
     
     print_message "success" "Table created successfully!"
@@ -181,7 +180,7 @@ list_tables() {
     clear
     echo -e "========== Tables in $db_name =========="
     
-    # Check if there are any metadata files (tables)
+   
     if [ -z "$(ls "$db_name"/*.metadata 2>/dev/null)" ]; then
         print_message "info" "No tables found!"
     else
@@ -215,7 +214,7 @@ drop_table() {
     read -p "Press Enter to continue..."
 }
 
-# Function to insert data into a table
+
 insert_into_table() {
     local db_name=$1
     clear
@@ -229,14 +228,14 @@ insert_into_table() {
         return
     fi
     
-    # Get metadata
+
     col_count=$(sed -n '2p' "$db_name/$table_name.metadata")
     
-    # Create arrays for column names and types
+
     declare -a col_names
     declare -a col_types
     
-    # Start from line 3 (first column definition)
+
     line_num=3
     for ((i=0; i<col_count; i++)); do
         IFS=',' read -r name type <<< "$(sed -n "${line_num}p" "$db_name/$table_name.metadata")"
@@ -245,7 +244,7 @@ insert_into_table() {
         ((line_num++))
     done
     
-    # Read primary key value
+
     read -p "Enter value for ${col_names[0]} (Primary Key): " pk_value
     
     # Check if primary key already exists
@@ -255,15 +254,15 @@ insert_into_table() {
         return
     fi
     
-    # Prepare the row data, starting with the primary key
+ 
     row_data="$pk_value"
     
-    # Read values for remaining columns
+
     for ((i=1; i<col_count; i++)); do
         while true; do
             read -p "Enter value for ${col_names[$i]}: " col_value
             
-            # Validate input based on column type
+       
             if [ "${col_types[$i]}" = "number" ]; then
                 if ! [[ "$col_value" =~ ^[0-9]+$ ]]; then
                     print_message "error" "Value must be a number for this column!"
@@ -271,24 +270,23 @@ insert_into_table() {
                 fi
             fi
             
-            # Escape commas in the input
+        
             col_value=${col_value//,/\\,}
             
             break
         done
-        
-        # Append to row data
+       
         row_data="$row_data,$col_value"
     done
     
-    # Add the row to the data file
+
     echo "$row_data" >> "$db_name/$table_name.data"
     
     print_message "success" "Data inserted successfully!"
     read -p "Press Enter to continue..."
 }
 
-# Function to select and display data from a table
+
 select_from_table() {
     local db_name=$1
     clear
@@ -302,13 +300,13 @@ select_from_table() {
         return
     fi
     
-    # Get metadata
+
     col_count=$(sed -n '2p' "$db_name/$table_name.metadata")
     
-    # Create arrays for column names
+
     declare -a col_names
     
-    # Start from line 3 (first column definition)
+ 
     line_num=3
     for ((i=0; i<col_count; i++)); do
         IFS=',' read -r name type <<< "$(sed -n "${line_num}p" "$db_name/$table_name.metadata")"
@@ -318,18 +316,18 @@ select_from_table() {
     
     echo -e "Table: $table_name"
     
-    # Print header
+
     header=""
     separator=""
     for ((i=0; i<col_count; i++)); do
-        # Calculate padding (minimum 15 characters)
+  
         padding=15
         col_len=${#col_names[$i]}
         if [ $col_len -gt $padding ]; then
             padding=$col_len
         fi
         
-        # Add to header and separator
+      
         header+="$(printf "%-${padding}s" "${col_names[$i]}")"
         separator+="$(printf "%-${padding}s" "$(echo "${col_names[$i]}" | sed 's/./=/g')")"
     done
@@ -337,11 +335,11 @@ select_from_table() {
     echo "$header"
     echo "$separator"
     
-    # Check if data file exists and has content
+ 
     if [ ! -s "$db_name/$table_name.data" ]; then
         echo "No data found in table!"
     else
-        # Print each row
+      
         while IFS= read -r line; do
             row=""
             IFS=',' read -ra values <<< "$line"
@@ -353,7 +351,7 @@ select_from_table() {
                     padding=$col_len
                 fi
                 
-                # Handle case where a value might be missing
+               
                 if [ -n "${values[$i]}" ]; then
                     # Unescape commas
                     display_value=${values[$i]//\\,/,}
@@ -370,7 +368,7 @@ select_from_table() {
     read -p "Press Enter to continue..."
 }
 
-# Function to delete a row from a table
+
 delete_from_table() {
     local db_name=$1
     clear
@@ -384,29 +382,29 @@ delete_from_table() {
         return
     fi
     
-    # Get primary key column name
+   
     pk_name=$(sed -n '3p' "$db_name/$table_name.metadata" | cut -d',' -f1)
     
     read -p "Enter $pk_name value to delete: " pk_value
     
-    # Check if the row exists
+   
     if ! grep -q "^$pk_value," "$db_name/$table_name.data" 2>/dev/null; then
         print_message "error" "Record with $pk_name=$pk_value does not exist!"
         read -p "Press Enter to continue..."
         return
     fi
     
-    # Create a temporary file without the row to delete
+
     grep -v "^$pk_value," "$db_name/$table_name.data" > "$db_name/$table_name.tmp"
     
-    # Replace the original file
+
     mv "$db_name/$table_name.tmp" "$db_name/$table_name.data"
     
     print_message "success" "Record deleted successfully!"
     read -p "Press Enter to continue..."
 }
 
-# Function to update a row in a table
+
 update_row() {
     local db_name=$1
     clear
@@ -420,14 +418,14 @@ update_row() {
         return
     fi
     
-    # Get metadata
+    
     col_count=$(sed -n '2p' "$db_name/$table_name.metadata")
     
-    # Create arrays for column names and types
+    
     declare -a col_names
     declare -a col_types
     
-    # Start from line 3 (first column definition)
+    
     line_num=3
     for ((i=0; i<col_count; i++)); do
         IFS=',' read -r name type <<< "$(sed -n "${line_num}p" "$db_name/$table_name.metadata")"
@@ -436,35 +434,35 @@ update_row() {
         ((line_num++))
     done
     
-    # Get primary key value to update
+   
     read -p "Enter ${col_names[0]} (Primary Key) value to update: " pk_value
     
-    # Check if the row exists
+    
     if ! grep -q "^$pk_value," "$db_name/$table_name.data" 2>/dev/null; then
         print_message "error" "Record with ${col_names[0]}=$pk_value does not exist!"
         read -p "Press Enter to continue..."
         return
     fi
     
-    # Get the current row
+   
     current_row=$(grep "^$pk_value," "$db_name/$table_name.data")
     IFS=',' read -ra current_values <<< "$current_row"
     
-    # Prepare the new row, keeping the primary key unchanged
+   
     new_row="$pk_value"
     
-    # Allow updating each column (except primary key)
+
     for ((i=1; i<col_count; i++)); do
-        # Show current value
+
         echo "Current ${col_names[$i]}: ${current_values[$i]//\\,/,}"
         
         read -p "Enter new value for ${col_names[$i]} (leave empty to keep current): " new_value
         
-        # If empty, keep current value
+        
         if [ -z "$new_value" ]; then
             new_value=${current_values[$i]}
         else
-            # Validate input based on column type
+        
             if [ "${col_types[$i]}" = "number" ]; then
                 if ! [[ "$new_value" =~ ^[0-9]+$ ]]; then
                     print_message "error" "Value must be a number for this column!"
@@ -473,28 +471,26 @@ update_row() {
                 fi
             fi
             
-            # Escape commas in the input
             new_value=${new_value//,/\\,}
         fi
         
-        # Append to new row data
+       
         new_row="$new_row,$new_value"
     done
     
-    # Create a temporary file with the updated row
+ 
     {
         grep -v "^$pk_value," "$db_name/$table_name.data"
         echo "$new_row"
     } > "$db_name/$table_name.tmp"
     
-    # Replace the original file
+    
     mv "$db_name/$table_name.tmp" "$db_name/$table_name.data"
     
     print_message "success" "Record updated successfully!"
     read -p "Press Enter to continue..."
 }
 
-# Function to display database menu
 database_menu() {
     local db_name=$1
     local choice
@@ -530,7 +526,6 @@ database_menu() {
     done
 }
 
-# Main menu function
 main_menu() {
     local choice
     
@@ -557,5 +552,4 @@ main_menu() {
     done
 }
 
-# Start the application
 main_menu
