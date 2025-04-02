@@ -162,7 +162,7 @@ create_table() {
     echo "$table_name" > "$db_name/$table_name.metadata"
     echo "$col_count" >> "$db_name/$table_name.metadata"
     
-    # Write column names and types to metadata
+ 
     for ((i=0; i<col_count; i++)); do
         echo "${col_names[$i]},${col_types[$i]}" >> "$db_name/$table_name.metadata"
     done
@@ -247,7 +247,7 @@ insert_into_table() {
 
     read -p "Enter value for ${col_names[0]} (Primary Key): " pk_value
     
-    # Check if primary key already exists
+
     if grep -q "^$pk_value," "$db_name/$table_name.data" 2>/dev/null; then
         print_message "error" "Primary Key value already exists!"
         read -p "Press Enter to continue..."
@@ -353,7 +353,7 @@ select_from_table() {
                 
                
                 if [ -n "${values[$i]}" ]; then
-                    # Unescape commas
+                 
                     display_value=${values[$i]//\\,/,}
                     row+="$(printf "%-${padding}s" "$display_value")"
                 else
