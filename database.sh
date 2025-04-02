@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-# Function to validate input to ensure it contains no special characters
+ characters
 validate_name() {
     local input=$1
     if [[ $input =~ ^[a-zA-Z0-9_]+$ ]]; then
